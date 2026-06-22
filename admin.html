@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KnottyChoco — Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cocoa:    #3B1A0A;
+      --dark-choc:#1C0A04;
+      --biscuit:  #C8955C;
+      --mocha:    #8B4513;
+      --cream:    #F5E6D3;
+      --cream-lt: #FDF6EE;
+      --text:     #2C1008;
+      --muted:    #7A5C48;
+      --success:  #4A7C59;
+      --danger:   #9B2335;
+      --sidebar-w: 240px;
+    }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #F0E6DA;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--dark-choc);
+      min-height: 100vh;
+      position: fixed; top: 0; left: 0;
+      display: flex; flex-direction: column;
+      z-index: 50;
+    }
+    .sidebar-brand {
+      padding: 1.8rem 1.5rem 1.2rem;
+      border-bottom: 1px solid rgba(200,149,92,.15);
+    }
+    .sidebar-brand .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem; font-weight: 900;
+      color: var(--biscuit);
+    }
+    .sidebar-brand .logo span { color: var(--cream); }
+    .sidebar-brand small {
+      display: block; color: rgba(245,230,211,.45);
+      font-size: 0.7rem; letter-spacing: 0.14em;
+      text-transform: uppercase; margin-top: 0.2rem;
+    }
+    .sidebar nav { padding: 1.4rem 0; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.8rem 1.5rem;
+      color: rgba(245,230,211,.6);
+      font-size: 0.87rem; cursor: pointer;
+      transition: all .18s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: var(--biscuit);
+      background: rgba(200,149,92,.08);
+      border-left-color: var(--biscuit);
+    }
+    .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 1.2rem 1.5rem;
+      border-top: 1px solid rgba(200,149,92,.15);
+    }
+    .sidebar-footer a {
+      color: rgba(245,230,211,.5); font-size: 0.8rem;
+      text-decoration: none; display: block;
+    }
+    .sidebar-footer a:hover { color: var(--biscuit); }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1; padding: 0;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--dark-choc);
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; color: var(--cream);
+    }
+    .topbar-actions { display: flex; gap: 1rem; align-items: center; }
+    .btn-primary {
+      background: var(--biscuit); color: var(--dark-choc);
+      border: none; padding: 0.55rem 1.3rem;
+      font-weight: 700; font-size: 0.82rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; border-radius: 2px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-primary:hover { background: var(--cream); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(200,149,92,.35);
+      color: var(--biscuit);
+      padding: 0.5rem 1.1rem;
+      font-size: 0.8rem; cursor: pointer;
+      border-radius: 2px; transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: var(--biscuit); background: rgba(200,149,92,.1); }
+
+    /* ── CONTENT ── */
+    .content { padding: 2.5rem; flex: 1; }
+
+    /* ── STAT CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1.2rem; margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: #fff;
+      padding: 1.4rem 1.6rem;
+      border-radius: 4px;
+      border-top: 3px solid var(--biscuit);
+    }
+    .stat-card .val {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem; font-weight: 900;
+      color: var(--cocoa);
+    }
+    .stat-card .lbl {
+      font-size: 0.75rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(59,26,10,.08);
+      margin-bottom: 2rem;
+    }
+    .panel-header {
+      padding: 1.2rem 1.8rem;
+      border-bottom: 1px solid #F0E6DA;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--cocoa);
+    }
+
+    /* ── TABLE ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #FAF3EC; }
+    th {
+      padding: 0.85rem 1.4rem;
+      text-align: left; font-size: 0.73rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); font-weight: 700;
+    }
+    td {
+      padding: 0.9rem 1.4rem;
+      border-bottom: 1px solid #F5EBE0;
+      font-size: 0.9rem;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FDFAF7; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .badge-choc { background: #F5E0CC; color: var(--mocha); }
+    .badge-bake { background: #DDE8D9; color: #3A6344; }
+    .badge-cake { background: #E8DCF0; color: #6A3D87; }
+    .badge-biscuit { background: #FBF0D5; color: #7A5700; }
+    .action-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; padding: 0.3rem 0.5rem;
+      border-radius: 3px; transition: background .15s;
+    }
+    .action-btn:hover { background: #F0E6DA; }
+    .action-btn.del:hover { background: #FCEDED; color: var(--danger); }
+
+    /* ── PRICE INLINE EDIT ── */
+    .price-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .price-input {
+      width: 80px;
+      border: 1px solid #DDD; border-radius: 3px;
+      padding: 0.3rem 0.5rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--mocha);
+      background: #FFF8F2;
+      display: none;
+    }
+    .price-display {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--mocha);
+    }
+    .save-price-btn {
+      display: none;
+      background: var(--success); color: #fff;
+      border: none; padding: 0.25rem 0.6rem;
+      font-size: 0.72rem; cursor: pointer; border-radius: 2px;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(28,10,4,.65);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      width: 90%; max-width: 520px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(28,10,4,.4);
+    }
+    .modal-head {
+      background: var(--dark-choc);
+      padding: 1.3rem 1.8rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--cream); font-size: 1.2rem;
+    }
+    .modal-close {
+      background: none; border: none;
+      color: rgba(245,230,211,.6);
+      font-size: 1.4rem; cursor: pointer;
+      line-height: 1; transition: color .15s;
+    }
+    .modal-close:hover { color: var(--cream); }
+    .modal-body { padding: 1.8rem; }
+    .form-row { margin-bottom: 1.3rem; }
+    .form-row label {
+      display: block; font-size: 0.75rem;
+      font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%;
+      border: 1px solid #DDD; border-radius: 3px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.92rem; color: var(--text);
+      background: #FFF8F2;
+      transition: border-color .2s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      outline: none; border-color: var(--biscuit);
+    }
+    .form-row textarea { min-height: 80px; resize: vertical; }
+    .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .modal-foot {
+      padding: 1.2rem 1.8rem;
+      border-top: 1px solid #F0E6DA;
+      display: flex; justify-content: flex-end; gap: 0.8rem;
+    }
+
+    /* ── TOAST ── */
+    #adminToast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      padding: 0.85rem 1.5rem;
+      border-radius: 3px; font-size: 0.88rem; font-weight: 700;
+      transform: translateY(120%); transition: transform .3s;
+      z-index: 999;
+    }
+    #adminToast.show { transform: translateY(0); }
+    #adminToast.success { background: var(--success); color: #fff; }
+    #adminToast.error   { background: var(--danger);  color: #fff; }
+
+    /* ── FIREBASE CONFIG NOTICE ── */
+    .config-notice {
+      background: #FFF3CD; border: 1px solid #FFC107;
+      border-radius: 4px; padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem; font-size: 0.88rem;
+      color: #7D5A00; line-height: 1.6;
+    }
+    .config-notice strong { display: block; margin-bottom: 0.4rem; font-size: 1rem; }
+    .config-notice code {
+      background: rgba(0,0,0,.08); padding: 0.1rem 0.4rem;
+      border-radius: 3px; font-family: monospace; font-size: 0.85rem;
+    }
+
+    /* ── CATEGORY FILTER TABS ── */
+    .filter-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .filter-tab {
+      padding: 0.35rem 1rem;
+      border: 1px solid #DDD; border-radius: 20px;
+      font-size: 0.78rem; cursor: pointer;
+      background: #fff; color: var(--muted);
+      transition: all .18s;
+    }
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--cocoa); color: var(--cream);
+      border-color: var(--cocoa);
+    }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .search-input {
+      border: 1px solid #DDD; border-radius: 3px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem; background: #FFF8F2;
+      width: 220px;
+    }
+    .search-input:focus { outline: none; border-color: var(--biscuit); }
+
+    /* responsive */
+    @media(max-width:768px){
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .form-2col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">Knotty<span>Choco</span></div>
+    <small>Admin Dashboard</small>
+  </div>
+  <nav>
+    <div class="nav-item active" onclick="showSection('products')">
+      <span class="nav-icon">🍫</span> Products
+    </div>
+    <div class="nav-item" onclick="showSection('categories')">
+      <span class="nav-icon">📂</span> Categories
+    </div>
+    <div class="nav-item" onclick="showSection('orders')">
+      <span class="nav-icon">📦</span> Orders
+    </div>
+    <div class="nav-item" onclick="showSection('settings')">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="index.html">← Back to Website</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-title" id="topbarTitle">Product Management</span>
+    <div class="topbar-actions">
+      <button class="btn-ghost" id="refreshBtn" onclick="refreshData()">↻ Refresh</button>
+      <button class="btn-primary" onclick="openAddModal()">+ Add Item</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- Firebase config notice -->
+    <div class="config-notice" id="configNotice">
+      <strong>⚠️ Firebase Setup Required</strong>
+      Open <code>index.html</code> and <code>admin.html</code> and replace the <code>firebaseConfig</code> object with your actual Firebase project credentials. Get yours at <strong>console.firebase.google.com</strong> → Project Settings → Your apps → SDK setup. Create a Firestore database in your project and add a collection named <code>products</code>.
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="val" id="statTotal">—</div>
+        <div class="lbl">Total Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statCats">—</div>
+        <div class="lbl">Categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statAvgPrice">—</div>
+        <div class="lbl">Avg Price (₹)</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statMaxPrice">—</div>
+        <div class="lbl">Highest Price (₹)</div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS PANEL -->
+    <div class="panel" id="productsSection">
+      <div class="panel-header">
+        <h3>Menu Items</h3>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+          <input class="search-input" id="searchInput" placeholder="🔍 Search items…" oninput="filterTable()"/>
+          <div class="filter-tabs" id="filterTabs">
+            <span class="filter-tab active" onclick="setFilter(this,'')">All</span>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Price (₹)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productBody">
+            <tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--muted)">Loading products…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Other sections placeholder -->
+    <div id="ordersSection" style="display:none">
+      <div class="panel">
+        <div class="panel-header"><h3>Orders</h3></div>
+        <div style="padding:3rem;text-align:center;color:var(--muted)">
+          📦 Order management coming soon.<br>
+          <small>Integrate with a payment gateway (Razorpay / Stripe) to track orders here.</small>
+        </div>
+      </div>
+    </div>
+    <div id="categoriesSection" style="display:none">
+      <div class="panel">
+        <div class="panel-header"><h3>Categories</h3></div>
+        <div style="padding:3rem;text-align:center;color:var(--muted)">
+          📂 Manage product categories. Categories are auto-derived from your products.
+        </div>
+      </div>
+    </div>
+    <div id="settingsSection" style="display:none">
+      <div class="panel">
+        <div class="panel-header"><h3>Settings</h3></div>
+        <div style="padding:2rem">
+          <div class="form-row">
+            <label>Store Name</label>
+            <input type="text" value="KnottyChoco"/>
+          </div>
+          <div class="form-row">
+            <label>Contact Email</label>
+            <input type="email" value="hello@knottychoco.in"/>
+          </div>
+          <div class="form-row">
+            <label>Store Address</label>
+            <textarea>12-B, Hauz Khas Village, New Delhi – 110016</textarea>
+          </div>
+          <button class="btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add New Item</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Item Name *</label>
+          <input type="text" id="fName" placeholder="Dark Truffle Box"/>
+        </div>
+        <div class="form-row">
+          <label>Category *</label>
+          <select id="fCategory">
+            <option>Chocolate</option>
+            <option>Bakery</option>
+            <option>Cake</option>
+            <option>Biscuit</option>
+            <option>Truffle</option>
+            <option>Seasonal</option>
+            <option>Gift Box</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <textarea id="fDesc" placeholder="A rich, hand-rolled truffle made with 70% dark Belgian chocolate…"></textarea>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Price (₹) *</label>
+          <input type="number" id="fPrice" placeholder="350" min="0"/>
+        </div>
+        <div class="form-row">
+          <label>Stock Status</label>
+          <select id="fStock">
+            <option value="available">Available</option>
+            <option value="limited">Limited Stock</option>
+            <option value="soldout">Sold Out</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="adminToast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+  import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, onSnapshot,
+           addDoc, updateDoc, deleteDoc, doc }
+           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── REPLACE WITH YOUR FIREBASE CONFIG ──
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  let allProducts = [];
+  let activeFilter = '';
+
+  const BADGE_MAP = {
+    chocolate: 'badge-choc', bakery: 'badge-bake',
+    cake: 'badge-cake', biscuit: 'badge-biscuit',
+    truffle: 'badge-choc', seasonal: 'badge-biscuit',
+    'gift box': 'badge-biscuit'
+  };
+
+  function badgeClass(cat = '') {
+    return BADGE_MAP[cat.toLowerCase()] || 'badge-choc';
+  }
+
+  function updateStats(products) {
+    const cats = [...new Set(products.map(p => p.category))];
+    const prices = products.map(p => Number(p.price) || 0);
+    const avg = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
+    const max = prices.length ? Math.max(...prices) : 0;
+
+    document.getElementById('statTotal').textContent    = products.length;
+    document.getElementById('statCats').textContent     = cats.length;
+    document.getElementById('statAvgPrice').textContent = avg;
+    document.getElementById('statMaxPrice').textContent = max;
+
+    // rebuild filter tabs
+    const tabsEl = document.getElementById('filterTabs');
+    tabsEl.innerHTML = `<span class="filter-tab ${activeFilter===''?'active':''}" onclick="setFilter(this,'')">All</span>`;
+    cats.forEach(c => {
+      const t = document.createElement('span');
+      t.className = `filter-tab ${activeFilter===c?'active':''}`;
+      t.textContent = c;
+      t.setAttribute('onclick', `setFilter(this,'${c}')`);
+      tabsEl.appendChild(t);
+    });
+  }
+
+  function renderTable(products) {
+    const tbody = document.getElementById('productBody');
+    if (!products.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--muted)">No items found. Click "+ Add Item" to create your first product.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = products.map(p => `
+      <tr data-id="${p.id}">
+        <td><strong>${p.name}</strong></td>
+        <td><span class="badge ${badgeClass(p.category)}">${p.category || '—'}</span></td>
+        <td style="max-width:260px;color:var(--muted);font-size:0.84rem">${p.description || '—'}</td>
+        <td>
+          <div class="price-cell" id="pc-${p.id}">
+            <span class="price-display" id="pd-${p.id}">₹${p.price}</span>
+            <input class="price-input" id="pi-${p.id}" type="number" value="${p.price}" min="0"/>
+            <button class="save-price-btn" id="spb-${p.id}" onclick="savePrice('${p.id}')">✓ Save</button>
+            <button class="action-btn" title="Quick edit price" onclick="editPrice('${p.id}')">✏️</button>
+          </div>
+        </td>
+        <td>
+          <button class="action-btn" title="Edit item" onclick="openEditModal('${p.id}')">📝</button>
+          <button class="action-btn del" title="Delete item" onclick="deleteItem('${p.id}','${p.name}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Live listener
+  onSnapshot(collection(db, 'products'), (snap) => {
+    allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStats(allProducts);
+    applyFilterAndRender();
+  }, (err) => {
+    console.error(err);
+    document.getElementById('productBody').innerHTML =
+      '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#9B2335">⚠️ Could not connect to Firebase. Please check your config and Firestore rules.</td></tr>';
+  });
+
+  function applyFilterAndRender() {
+    const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    let filtered = allProducts;
+    if (activeFilter) filtered = filtered.filter(p => p.category === activeFilter);
+    if (search) filtered = filtered.filter(p =>
+      (p.name || '').toLowerCase().includes(search) ||
+      (p.description || '').toLowerCase().includes(search)
+    );
+    renderTable(filtered);
+  }
+
+  // ── PRICE QUICK EDIT ──
+  window.editPrice = function(id) {
+    document.getElementById(`pd-${id}`).style.display   = 'none';
+    document.getElementById(`pi-${id}`).style.display   = 'inline-block';
+    document.getElementById(`spb-${id}`).style.display  = 'inline-block';
+    document.getElementById(`pi-${id}`).focus();
+  };
+
+  window.savePrice = async function(id) {
+    const val = Number(document.getElementById(`pi-${id}`).value);
+    if (isNaN(val) || val < 0) return showToast('Enter a valid price', 'error');
+    try {
+      await updateDoc(doc(db, 'products', id), { price: val });
+      showToast('Price updated!', 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  };
+
+  // ── ADD / EDIT MODAL ──
+  window.openAddModal = function() {
+    document.getElementById('modalTitle').textContent = 'Add New Item';
+    document.getElementById('editId').value   = '';
+    document.getElementById('fName').value    = '';
+    document.getElementById('fDesc').value    = '';
+    document.getElementById('fPrice').value   = '';
+    document.getElementById('fCategory').value = 'Chocolate';
+    document.getElementById('fStock').value   = 'available';
+    document.getElementById('modalOverlay').classList.add('open');
+  };
+
+  window.openEditModal = function(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modalTitle').textContent = 'Edit Item';
+    document.getElementById('editId').value   = id;
+    document.getElementById('fName').value    = p.name || '';
+    document.getElementById('fDesc').value    = p.description || '';
+    document.getElementById('fPrice').value   = p.price || '';
+    document.getElementById('fCategory').value = p.category || 'Chocolate';
+    document.getElementById('fStock').value   = p.stock || 'available';
+    document.getElementById('modalOverlay').classList.add('open');
+  };
+
+  window.closeModal = function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  };
+
+  window.saveItem = async function() {
+    const id   = document.getElementById('editId').value;
+    const name = document.getElementById('fName').value.trim();
+    const price = Number(document.getElementById('fPrice').value);
+    if (!name)        return showToast('Item name is required', 'error');
+    if (isNaN(price) || price < 0) return showToast('Enter a valid price', 'error');
+
+    const data = {
+      name,
+      category:    document.getElementById('fCategory').value,
+      description: document.getElementById('fDesc').value.trim(),
+      price,
+      stock:       document.getElementById('fStock').value,
+      updatedAt:   new Date().toISOString()
+    };
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, 'products', id), data);
+        showToast('Item updated successfully!', 'success');
+      } else {
+        data.createdAt = new Date().toISOString();
+        await addDoc(collection(db, 'products'), data);
+        showToast('Item added successfully!', 'success');
+      }
+      closeModal();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  };
+
+  window.deleteItem = async function(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, 'products', id));
+      showToast(`"${name}" deleted.`, 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  };
+
+  // ── FILTERS & SEARCH ──
+  window.setFilter = function(el, cat) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = cat;
+    applyFilterAndRender();
+  };
+
+  window.filterTable = applyFilterAndRender;
+
+  window.refreshData = function() {
+    showToast('Data is live — updates automatically!', 'success');
+  };
+
+  // ── SECTION SWITCHER ──
+  window.showSection = function(name) {
+    ['products','orders','categories','settings'].forEach(s => {
+      const el = document.getElementById(s+'Section');
+      if (el) el.style.display = s === name ? 'block' : 'none';
+    });
+    const titles = { products:'Product Management', orders:'Orders', categories:'Categories', settings:'Settings' };
+    document.getElementById('topbarTitle').textContent = titles[name] || 'Admin';
+    document.querySelectorAll('.nav-item').forEach((n,i) => {
+      const names = ['products','categories','orders','settings'];
+      n.classList.toggle('active', names[i] === name);
+    });
+  };
+
+  // ── TOAST ──
+  function showToast(msg, type='success') {
+    const t = document.getElementById('adminToast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+</script>
+</body>
+</html>
